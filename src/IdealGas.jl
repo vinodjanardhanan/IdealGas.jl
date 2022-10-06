@@ -320,7 +320,7 @@ Calculates the specific heat of a mixture in J/mol-K
 -   'mlf::Array{Float64,1}' : species mole fractions    
 """
 function cpmix(thermoObj::SpeciesThermoObj,T::Float64,mlf::Array{Float64,1})
-    all_species_cp = S_all(thermoObj,T)
+    all_species_cp = cp_all(thermoObj,T)
     return sum(all_species_cp .* mlf)
 end
 
