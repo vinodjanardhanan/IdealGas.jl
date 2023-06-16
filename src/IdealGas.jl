@@ -1,8 +1,9 @@
-module IdealGas
-include("Constants.jl")
+ module IdealGas
 
-export create_thermo, cp, H, S, cp_all, cpmix, H_all, Hmix, S_all, Smix, Gmix
+using RxnHelperUtils
 
+export create_thermo, cp, H, S, cp_all, cpmix, H_all, Hmix, S_all, Smix, Gmix, E0_H2, E0_CO
+export nernst, nernst_co
 
 abstract type ComponentDefinition end
 abstract type ThermoData end
@@ -355,6 +356,96 @@ function  Gmix(thermoObj::SpeciesThermoObj, T::Float64,p::Float64,mlf::Array{Flo
     hmix = Hmix(thermoObj,T,mlf)
     smix = Smix(thermoObj,T,p,mlf)
     return hmix - T*smix
+end
+
+
+"""
+Function to calculate the standard potential for H2 oxidation. 
+    This function uses the enthalpy of formation of water vapour.    
+#   Usage:    
+    E0_H2(thermoObj, T)
+-   thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
+-   T: Temperature in K
+"""
+function E0_H2(thermoObj, T)
+    
+    if T < 373.15
+        return 1.229-0.85e-3(T-298.15)
+    end
+    
+    species_all =[ nasa_thermo.name for nasa_thermo in thermoObj.thermo_all]
+   
+    hH2 = H(thermoObj.thermo_all[get_index("H2", species_all)], T) 
+    hO2 = H(thermoObj.thermo_all[get_index("O2", species_all)], T)
+    hH2O = H(thermoObj.thermo_all[get_index("H2O", species_all)], T)
+
+    sH2 = S(thermoObj.thermo_all[get_index("H2", species_all)], T)
+    sO2 = S(thermoObj.thermo_all[get_index("O2", species_all)], T)
+    sH2O = S(thermoObj.thermo_all[get_index("H2O", species_all)], T)
+
+    delH = hH2O - (hH2+0.5*hO2)
+    delS = sH2O - (sH2+0.5*sO2)
+
+    delG = delH - T*delS    
+    return -delG/2F
+
+end
+
+
+"""
+Function to calculate the standard potential for CO oxidation
+#   Usage:    
+    E0_CO(thermoObj, T)
+-   thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
+-   T: Temperature in K
+"""
+function E0_CO(thermoObj, T)   
+    species_all =[ nasa_thermo.name for nasa_thermo in thermoObj.thermo_all]
+    hCO = H(thermoObj.thermo_all[get_index("CO", species_all)], T)
+    hO2 = H(thermoObj.thermo_all[get_index("O2", species_all)], T)
+    hCO2 = H(thermoObj.thermo_all[get_index("CO2", species_all)], T)
+ 
+    sCO = S(thermoObj.thermo_all[get_index("CO", species_all)], T)
+    sO2 = S(thermoObj.thermo_all[get_index("O2", species_all)], T)
+    sCO2 = S(thermoObj.thermo_all[get_index("CO2", species_all)], T)
+ 
+    delH = hCO2 - (hCO+0.5*hO2)
+    delS = sCO2 - (sCO+0.5*sO2)
+ 
+    delG = delH - T*delS
+ 
+    return -delG/2F
+ 
+ end
+ 
+
+ """
+ Function to calculate the Nernst potential for H2 oxidation
+ #  Usage:    
+    nernst(E0, T; pH2, pO2, pH2O)
+ -  E0 : standard potential for H2 oxidation
+ -  T : Temperature in K
+ -  pH2 : Partial pressure of H2 (Pa)
+ -  pO2 : Partial pressure of O2 (Pa)
+ -  pH2O : Partial pressure of H2O (Pa)
+ """
+function nernst(E0::Float64, T::Float64; pH2=1.0, pO2=1.0, pH2O=1.0)
+    return E0 - (R*T/2F)*log((pH2O/p_std)/((pH2/p_std)*(pO2/p_std)^0.5))    
+end
+
+
+"""
+Function to calculate the Nernst potential for CO oxidation
+#  Usage:    
+   nernst(E0, T; pCO, pO2, pCO2)
+-  E0 : standard potential for CO oxidation
+-  T : Temperature in K
+-  pCO : Partial pressure of CO (Pa)
+-  pO2 : Partial pressure of O2 (Pa)
+-  pCO2 : Partial pressure of CO2 (Pa)
+"""
+function nernst_co(E0::Float64, T::Float64; pCO=1.0, pO2=1.0, pCO2=1.0)
+    return E0 - (R*T/2F)*log(pCO2/(pCO*(pO2/p_std)^0.5))    
 end
 
 
