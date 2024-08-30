@@ -1,14 +1,14 @@
 name = "IdealGas"
 uuid = "7aa10a8e-8b87-4952-8d6b-aae44b8b139e"
 authors = ["Vinod Janardhanan"]
-version = "0.1.8"
+version = "0.1.9"
 
 [deps]
 RxnHelperUtils = "58b8660e-aa37-4837-a287-8893ee0015f8"
 
 [compat]
 julia = "1.9.1"
-RxnHelperUtils = "1.0.2"
+RxnHelperUtils = "1.0.3"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
