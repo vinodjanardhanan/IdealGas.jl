@@ -2,11 +2,13 @@
 
 using RxnHelperUtils
 
-export create_thermo, cp, H, S, cp_all, cpmix, H_all, Hmix, S_all, Smix, Gmix, E0_H2, E0_CO, nerst_potential
-export NernstH2, NernstCO
+export create_thermo, cp, H, S, cp_all, cpmix, H_all, Hmix, S_all, Smix, Gmix, E0_H2, E0_CO, nernst_potential
+export H2Oxidation, COOxidation
 
 abstract type ComponentDefinition end
 abstract type ThermoData end
+abstract type ECReaction end
+
 
 struct Gasphase <: ComponentDefinition    
     species::Array{String,1}
@@ -25,21 +27,9 @@ struct NASAThermo{T1 <: Float64, T2 <: Integer} <: ThermoData
 end
 
 
-mutable struct NernstH2 
-    E0::Float64
-    T::Float64
-    aH2::Float64
-    aO2::Float64
-    aH2O::Float64
-end
 
-mutable struct NernstCO 
-    E0::Float64
-    T::Float64
-    aCO::Float64
-    aO2::Float64
-    aCO2::Float64
-end
+struct H2Oxidation <: ECReaction end
+struct COOxidation <: ECReaction end
 
 #This array will be order as per ig.species
 struct SpeciesThermoObj
@@ -433,43 +423,33 @@ function E0_CO(thermoObj, T)
  end
  
 
- """
- Function to calculate the Nernst potential for H2 oxidation
- #  Usage:    
-    nernst(E0, T; pH2, pO2, pH2O)
- -  E0 : standard potential for H2 oxidation
- -  T : Temperature in K
- -  pH2 : Partial pressure of H2 (Pa)
- -  pO2 : Partial pressure of O2 (Pa)
- -  pH2O : Partial pressure of H2O (Pa)
- """
-# function nernst(E0::Float64, T::Float64; pH2=1.0, pO2=1.0, pH2O=1.0)
-#     return E0 - (R*T/2F)*log((pH2O/p_std)/((pH2/p_std)*(pO2/p_std)^0.5))    
-# end
-
-
-function nerst_potential(np::NernstH2)
-    return np.E0 - (R*np.T/2F)*log(np.aH2O/(np.aH2*sqrt(np.aO2)))
+"""
+Function to calculate the Nernst potential for H2 oxidation
+#  Usage:    
+   nernst_potential(::H2Oxidation, E0::Float64, T::Float64; aH2, aO2, aH2O)
+-  E0 : standard potential for H2 oxidation
+-  T : Temperature in K
+-  aH2 : Activity of H2
+-  aO2 : Activity of O2
+-  aH2O : Activity of H2O
+"""
+function nernst_potential(::H2Oxidation, E0::Float64, T::Float64; aH2=1.0, aO2=1.0, aH2O=1.0)
+    return E0 - (R*T/2F)*log(aH2O/(aH2*sqrt(aO2)))
 end
 
 """
 Function to calculate the Nernst potential for CO oxidation
 #  Usage:    
-   nernst(E0, T; pCO, pO2, pCO2)
+   nernst_potential(::COOxidation, E0::Float64, T::Float64; aCO, aO2, aCO2)
 -  E0 : standard potential for CO oxidation
 -  T : Temperature in K
--  pCO : Partial pressure of CO (Pa)
--  pO2 : Partial pressure of O2 (Pa)
--  pCO2 : Partial pressure of CO2 (Pa)
-"""
-# function nernst_co(E0::Float64, T::Float64; pCO=1.0, pO2=1.0, pCO2=1.0)
-#     return E0 - (R*T/2F)*log(pCO2/(pCO*(pO2/p_std)^0.5))    
-# end
-
-function nerst_potential(np::NernstCO)    
-    return np.E0 - (R*np.T/2F)*log(np.aCO2/(np.aCO*sqrt(np.aO2)))
+-  aCO : Activity of CO 
+-  aO2 : Activity of O2
+-  aCO2 : Activity of CO2
+"""        
+function nernst_potential(::COOxidation, E0::Float64, T::Float64; aCO, aO2, aCO2)
+    return E0 - (R*T/2F)*log(aCO2/(aCO*sqrt(aO2)))
 end
-
 
 #end of module IdealGas
 end
