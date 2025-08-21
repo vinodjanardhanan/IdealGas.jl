@@ -2,8 +2,8 @@
 
 using RxnHelperUtils
 
-export create_thermo, cp, H, S, cp_all, cpmix, H_all, Hmix, S_all, Smix, Gmix, E0_H2, E0_CO
-export nernst, nernst_co
+export create_thermo, cp, H, S, cp_all, cpmix, H_all, Hmix, S_all, Smix, Gmix, E0_H2, E0_CO, nerst_potential
+export NernstH2, NernstCO
 
 abstract type ComponentDefinition end
 abstract type ThermoData end
@@ -22,6 +22,23 @@ struct NASAThermo{T1 <: Float64, T2 <: Integer} <: ThermoData
     cmt::T1
     ltp::Array{T1,1}
     htp::Array{T1,1}
+end
+
+
+mutable struct NernstH2 
+    E0::Float64
+    T::Float64
+    aH2::Float64
+    aO2::Float64
+    aH2O::Float64
+end
+
+mutable struct NernstCO 
+    E0::Float64
+    T::Float64
+    aCO::Float64
+    aO2::Float64
+    aCO2::Float64
 end
 
 #This array will be order as per ig.species
@@ -203,17 +220,16 @@ Calculate the specific heat of pure species J/mol-K
 -   thermo::NASAThermo: NASAThermo of the species
 -   T::Float64: Temperature in K at which the property is required    
 # Usage-2:
-    cp(sp,T,thermo,ig)
+    cp(sp,T,thermoObj)
 -   sp::String : species name
 -   T::Float64 : Temperature K
 -   thermoObj::SpeciesThermoObj : Structure of SpeciesThermoObj
--   species_list::Array{String,1}  : List of species 
 """
 function cp(thermo::NASAThermo, T::Float64)
     TVec = [T^i for i in 0:4]    
     T < thermo.cmt ? sum(thermo.ltp[1:5] .* TVec)*R : sum(thermo.htp[1:5] .* TVec)*R
 end
-cp(sp::String,T::Float64,thermoObj::SpeciesThermoObj,species_list::Array{String,1}) = cp(thermoObj.thermo_all[get_index(sp,species_list)],T)
+cp(sp::String,T::Float64,thermoObj::SpeciesThermoObj) = cp(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
 
 
 
@@ -225,17 +241,16 @@ Calculates the enthalpy of pure species J/mol
 -   'thermo::NASAThermo': NASAThermo of the species
 -   'T::Float64': Temperature in K at which the property is required   
 # Usage-2:
-    H(sp,T,thermo,ig)
+    H(sp,T,thermo)
 -   sp::String : species name
 -   T::Float64 : Temperature K
 -   thermoObj::SpeciesThermoObj : Structure of SpeciesThermoObj
--   species_list::Array{String,1}  : List of species 
 """
 function H(thermo::NASAThermo, T::Float64)
     TVec = [1, T/2.0, T^2/3.0, T^3/4.0, T^4/5.0, 1.0/T]    
     T < thermo.cmt ? sum(thermo.ltp[1:6] .* TVec)*R*T : sum(thermo.htp[1:6] .* TVec)*R*T
 end
-H(sp::String,T::Float64,thermoObj::SpeciesThermoObj,species_list::Array{String,1}) = H(thermoObj.thermo_all[get_index(sp,species_list)],T)
+H(sp::String,T::Float64,thermoObj::SpeciesThermoObj) = H(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
 
 
 """
@@ -246,11 +261,10 @@ Calculates the entropy of pure species J/mol-K
 -   thermo::NASAThermo: NASAThermo of the species
 -   T::Float64: Temperature in K at which the property is required    
 # Usage-2:
-    S(sp,T,thermo,ig)
+    S(sp,T,thermo)
 -   sp::String : species name
 -   T::Float64 : Temperature K
 -   thermo::SpeciesThermoObj : Structure of SpeciesThermoObj
--   species_list::Array{String,1}  : List of species 
 """
 function S(thermo::NASAThermo, T::Float64)
     TVec = [log(T), T, T^2/2.0, T^3/3.0, T^4/4.0]    
@@ -260,7 +274,7 @@ function S(thermo::NASAThermo, T::Float64)
         return (sum(thermo.htp[1:5] .* TVec) + thermo.htp[7])*R
     end
 end
-S(sp::String,T::Float64,thermoObj::SpeciesThermoObj,species_list::Array{String,1}) = S(thermoObj.thermo_all[get_index(sp,species_list)],T)
+S(sp::String,T::Float64,thermoObj::SpeciesThermoObj) = S(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
 
 
 """
@@ -429,10 +443,14 @@ function E0_CO(thermoObj, T)
  -  pO2 : Partial pressure of O2 (Pa)
  -  pH2O : Partial pressure of H2O (Pa)
  """
-function nernst(E0::Float64, T::Float64; pH2=1.0, pO2=1.0, pH2O=1.0)
-    return E0 - (R*T/2F)*log((pH2O/p_std)/((pH2/p_std)*(pO2/p_std)^0.5))    
-end
+# function nernst(E0::Float64, T::Float64; pH2=1.0, pO2=1.0, pH2O=1.0)
+#     return E0 - (R*T/2F)*log((pH2O/p_std)/((pH2/p_std)*(pO2/p_std)^0.5))    
+# end
 
+
+function nerst_potential(np::NernstH2)
+    return np.E0 - (R*np.T/2F)*log(np.aH2O/(np.aH2*sqrt(np.aO2)))
+end
 
 """
 Function to calculate the Nernst potential for CO oxidation
@@ -444,8 +462,12 @@ Function to calculate the Nernst potential for CO oxidation
 -  pO2 : Partial pressure of O2 (Pa)
 -  pCO2 : Partial pressure of CO2 (Pa)
 """
-function nernst_co(E0::Float64, T::Float64; pCO=1.0, pO2=1.0, pCO2=1.0)
-    return E0 - (R*T/2F)*log(pCO2/(pCO*(pO2/p_std)^0.5))    
+# function nernst_co(E0::Float64, T::Float64; pCO=1.0, pO2=1.0, pCO2=1.0)
+#     return E0 - (R*T/2F)*log(pCO2/(pCO*(pO2/p_std)^0.5))    
+# end
+
+function nerst_potential(np::NernstCO)    
+    return np.E0 - (R*np.T/2F)*log(np.aCO2/(np.aCO*sqrt(np.aO2)))
 end
 
 

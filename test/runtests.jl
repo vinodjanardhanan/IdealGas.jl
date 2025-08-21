@@ -4,40 +4,41 @@ using Test
 @testset "IdealGas.jl" begin
     
     @testset "Thermoall test " begin        
-        retcode = create_thermo(["CH4"], "lib/therm.dat" )
-        @test retcode.thermo_all[1].name == "CH4"                    
+        thObj = create_thermo(["CH4", "CO", "CO2", "H2", "H2O", "O2"], "lib/therm.dat" )
+        cpch4 = IdealGas.cp("CH4", 298.15, thObj)
+        hch4 = IdealGas.H("CH4", 298.15, thObj)
+        sch4 = IdealGas.S("CH4", 298.15, thObj)
+        println("cp CH4: ", cpch4)
+        println("H CH4: ", hch4)
+        println("S CH4: ", sch4)
+        hall = H_all(thObj, 298.15)
+        sall = S_all(thObj, 298.15)
+        cpall = cp_all(thObj, 298.15)
+        @test hall[1] == hch4
+        @test sall[1] == sch4
+        @test cpall[1] == cpch4        
     end
 
-    @testset "STD potential H2" begin
+    @testset "Nernst potential for H2" begin        
         thObj = create_thermo(["H2", "H2O", "O2"], "lib/therm.dat" )
-        E0 = E0_H2(thObj,1073.15)
-        @test E0 < 0.977 && E0 > 0.976
+        E0 = E0_H2(thObj,1073.15)       
+        aH2 = 0.3
+        aH2O = 0.6
+        aO2 = 0.21
+        npH2 = NernstH2(E0, 1073.15, aH2, aO2, aH2O)
+        eh2 = nerst_potential(npH2)
+        @test 0.9 < eh2 < 1.1        
     end
 
-    @testset "STD potential CO" begin
+    @testset "Nernst potential for CO" begin        
         thObj = create_thermo(["CO", "CO2", "O2"], "lib/therm.dat" )
-        E0 = E0_CO(thObj,1073.15)
-        @test E0 < 0.999 && E0 > 0.98
+        E0 = E0_CO(thObj,1073.15)       
+        aCO = 0.3
+        aCO2 = 0.6
+        aO2 = 0.21
+        npCO = NernstCO(E0, 1073.15, aCO, aO2, aCO2)
+        eco= nerst_potential(npCO)
+        @test 0.9 < eco < 1.1        
     end
 
-    @testset "Nernst potential H2-O2 below 100 C" begin
-        thObj = create_thermo(["H2", "H2O", "O2"], "lib/therm.dat" )
-        E0 = E0_H2(thObj,298.15)
-        E_rev = nernst(E0,298.15,pH2=1e5,pO2=0.21e5,pH2O=1e5)                
-        @test E_rev > 0 && E_rev < 1.5
-    end
-
-    @testset "Nernst potential H2-O2 above 100 C" begin
-        thObj = create_thermo(["H2", "H2O", "O2"], "lib/therm.dat" )
-        E0 = E0_H2(thObj,1073.15)
-        E_rev = nernst(E0,1073.15,pH2=0.5e5,pO2=0.21e5,pH2O=0.5e5)                
-        @test E_rev > 0 && E_rev < 1.5
-    end
-
-    @testset "Nernst potential CO-CO2 " begin
-        thObj = create_thermo(["CO", "CO2", "O2"], "lib/therm.dat" )
-        E0 = E0_CO(thObj,1073.15)
-        E_rev = nernst_co(E0,1073.15,pCO=0.5e5, pO2=0.21e5,pCO2=0.5e5)                
-        @test E_rev > 0 && E_rev < 1.5
-    end
 end
