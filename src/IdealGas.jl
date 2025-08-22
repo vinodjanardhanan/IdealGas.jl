@@ -451,5 +451,35 @@ function nernst_potential(::COOxidation, E0::Float64, T::Float64; aCO, aO2, aCO2
     return E0 - (R*T/2F)*log(aCO2/(aCO*sqrt(aO2)))
 end
 
+ """
+ Function to calculate the Nernst potential for H2 oxidation
+ #  Usage:    
+    nernst(E0, T; pH2, pO2, pH2O)
+ -  E0 : standard potential for H2 oxidation
+ -  T : Temperature in K
+ -  pH2 : Partial pressure of H2 (Pa)
+ -  pO2 : Partial pressure of O2 (Pa)
+ -  pH2O : Partial pressure of H2O (Pa)
+ """
+function nernst_h2(E0::Float64, T::Float64; pH2=1.0, pO2=1.0, pH2O=1.0)
+    return E0 - (R*T/2F)*log((pH2O/p_std)/((pH2/p_std)*(pO2/p_std)^0.5))    
+end
+
+
+"""
+Function to calculate the Nernst potential for CO oxidation
+#  Usage:    
+   nernst(E0, T; pCO, pO2, pCO2)
+-  E0 : standard potential for CO oxidation
+-  T : Temperature in K
+-  pCO : Partial pressure of CO (Pa)
+-  pO2 : Partial pressure of O2 (Pa)
+-  pCO2 : Partial pressure of CO2 (Pa)
+"""
+function nernst_co(E0::Float64, T::Float64; pCO=1.0, pO2=1.0, pCO2=1.0)
+    return E0 - (R*T/2F)*log(pCO2/(pCO*(pO2/p_std)^0.5))    
+end
+
+
 #end of module IdealGas
 end
