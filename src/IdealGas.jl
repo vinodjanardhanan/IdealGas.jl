@@ -2,7 +2,7 @@
 
 using RxnHelperUtils
 
-export create_thermo, cp, H, S, cp_all, cpmix, H_all, Hmix, S_all, Smix, Gmix, E0_H2, E0_CO, nernst_potential
+export create_thermo, cp, H, S, cp_all, cpmix, H_all, Hmix, S_all, Smix, Gmix, E0_H2, E0_CO, nernst_potential, nernst_h2, nernst_co
 export H2Oxidation, COOxidation
 
 abstract type ComponentDefinition end
@@ -433,7 +433,7 @@ Function to calculate the Nernst potential for H2 oxidation
 -  aO2 : Activity of O2
 -  aH2O : Activity of H2O
 """
-function nernst_potential(::H2Oxidation, E0::Float64, T::Float64; aH2=1.0, aO2=1.0, aH2O=1.0)
+function nernst_potential(::H2Oxidation, E0::Float64, T::Float64; aH2, aO2, aH2O)
     return E0 - (R*T/2F)*log(aH2O/(aH2*sqrt(aO2)))
 end
 
