@@ -24,6 +24,12 @@ using Test
         aO2 = 0.21
         eh2 = nernst_potential(H2Oxidation(), E0, 1073.15, aH2=aH2, aO2=aO2, aH2O=aH2O)                
         @test 0.9 < eh2 < 1.1        
+        eh2 = nernst_h2(E0, 1073.15, pH2=1e5, pO2=0.21e5, pH2O=1.0, water=:liquid)                
+        @test 0.9 < eh2 < 1.1        
+        eh2 = nernst_h2(E0, 1073.15, pH2=1e5, pO2=0.21e5, pH2O=0.79e5, water=:gas)                
+        @test 0.9 < eh2 < 1.1        
+        eh2 = nernst_h2(E0, 1073.15, pH2=1e5, pO2=0.21e5, pH2O=0.79e5, water=:vapor)                
+        @test 0.9 < eh2 < 1.1        
     end
 
     @testset "Nernst potential for CO" begin        
@@ -33,7 +39,13 @@ using Test
         aCO2 = 0.6
         aO2 = 0.21
         eco = nernst_potential(COOxidation(), E0, 1073.15, aCO=aCO, aO2=aO2, aCO2=aCO2)        
+        @test 0.9 < eco < 1.1                
+        p_std = 1e5
+        eco = nernst_co(E0, 1073.15, pCO=1e5, pO2=0.21*p_std, pCO2=0.79*p_std)        
         @test 0.9 < eco < 1.1        
     end
 
+    
 end
+
+

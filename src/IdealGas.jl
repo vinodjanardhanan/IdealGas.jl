@@ -208,55 +208,55 @@ Calculate the specific heat of pure species J/mol-K
 #   Usage-1:
     cp(thermo,T) 
 -   thermo::NASAThermo: NASAThermo of the species
--   T::Float64: Temperature in K at which the property is required    
+-   T::Number: Temperature in K at which the property is required    
 # Usage-2:
     cp(sp,T,thermoObj)
 -   sp::String : species name
--   T::Float64 : Temperature K
+-   T::Number : Temperature K
 -   thermoObj::SpeciesThermoObj : Structure of SpeciesThermoObj
 """
-function cp(thermo::NASAThermo, T::Float64)
+function cp(thermo::NASAThermo, T::Number)
     TVec = [T^i for i in 0:4]    
     T < thermo.cmt ? sum(thermo.ltp[1:5] .* TVec)*R : sum(thermo.htp[1:5] .* TVec)*R
 end
-cp(sp::String,T::Float64,thermoObj::SpeciesThermoObj) = cp(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
+cp(sp::String,T::Number,thermoObj::SpeciesThermoObj) = cp(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
 
 
 
 """
-H(thermo::NASAThermo, T::Float64)
+H(thermo::NASAThermo, T::Number)
 Calculates the enthalpy of pure species J/mol
 #   Usage-1:
     H(thermo,T)
 -   'thermo::NASAThermo': NASAThermo of the species
--   'T::Float64': Temperature in K at which the property is required   
+-   'T::Number': Temperature in K at which the property is required   
 # Usage-2:
     H(sp,T,thermo)
 -   sp::String : species name
--   T::Float64 : Temperature K
+-   T::Number : Temperature K
 -   thermoObj::SpeciesThermoObj : Structure of SpeciesThermoObj
 """
-function H(thermo::NASAThermo, T::Float64)
+function H(thermo::NASAThermo, T::Number)
     TVec = [1, T/2.0, T^2/3.0, T^3/4.0, T^4/5.0, 1.0/T]    
     T < thermo.cmt ? sum(thermo.ltp[1:6] .* TVec)*R*T : sum(thermo.htp[1:6] .* TVec)*R*T
 end
-H(sp::String,T::Float64,thermoObj::SpeciesThermoObj) = H(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
+H(sp::String,T::Number,thermoObj::SpeciesThermoObj) = H(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
 
 
 """
-S(thermo::NASAThermo, T::Float64)
+S(thermo::NASAThermo, T::Number)
 Calculates the entropy of pure species J/mol-K
 #   Usage-1:
     S(thermo,T)
 -   thermo::NASAThermo: NASAThermo of the species
--   T::Float64: Temperature in K at which the property is required    
+-   T::Number: Temperature in K at which the property is required    
 # Usage-2:
     S(sp,T,thermo)
 -   sp::String : species name
--   T::Float64 : Temperature K
+-   T::Number : Temperature K
 -   thermo::SpeciesThermoObj : Structure of SpeciesThermoObj
 """
-function S(thermo::NASAThermo, T::Float64)
+function S(thermo::NASAThermo, T::Number)
     TVec = [log(T), T, T^2/2.0, T^3/3.0, T^4/4.0]    
     if T < thermo.cmt
         return (sum(thermo.ltp[1:5] .* TVec) + thermo.ltp[7])*R
@@ -264,7 +264,7 @@ function S(thermo::NASAThermo, T::Float64)
         return (sum(thermo.htp[1:5] .* TVec) + thermo.htp[7])*R
     end
 end
-S(sp::String,T::Float64,thermoObj::SpeciesThermoObj) = S(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
+S(sp::String,T::Number,thermoObj::SpeciesThermoObj) = S(thermoObj.thermo_all[get_index(sp,[i.name for i  in thermoObj.thermo_all])],T)
 
 
 """
@@ -272,9 +272,9 @@ Calculates the specific heat of all species in J/mol-K
 #   Usage
     cp_all(td,T)
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
--   'T::Float64' : Temperature in K at which the property is rquired
+-   'T::Number' : Temperature in K at which the property is rquired
 """
-function cp_all(thermoObj::SpeciesThermoObj,T::Float64)
+function cp_all(thermoObj::SpeciesThermoObj,T::Number)
     return map(x->cp(x,T),thermoObj.thermo_all)
 end
 
@@ -284,9 +284,9 @@ Calculates the enthalpy of all species in J/mol
 #   Usage
     H_all(td,T)
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
--   'T::Float64' : Temperature in K at which the property is rquired
+-   'T::Number' : Temperature in K at which the property is rquired
 """
-function H_all(thermoObj::SpeciesThermoObj,T::Float64)
+function H_all(thermoObj::SpeciesThermoObj,T::Number)
     return map(x->H(x,T),thermoObj.thermo_all)
 end
 
@@ -296,22 +296,22 @@ Calculates the entropy of all species in J/mol-K
 #   Usage
     S_all(td,T)
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
--   'T::Float64' : Temperature in K at which the property is rquired
+-   'T::Number' : Temperature in K at which the property is rquired
 """
-function S_all(thermoObj::SpeciesThermoObj,T::Float64)
+function S_all(thermoObj::SpeciesThermoObj,T::Number)
     return map(x->S(x,T),thermoObj.thermo_all)
 end
 
 """
-Hmix(thermoObj::SpeciesThermoObj,T::Float64,mlf::Array{Float64,1})    
+Hmix(thermoObj::SpeciesThermoObj,T::Number,mlf::Array{Number,1})    
 Calculates the enthalpy of a mixture J/mol
 #   Usage
     Hmix(td,T,mlf)
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
--   'T::Float64' : Temperature in K
--   'mlf::Array{Float64,1}' : species mole fractions    
+-   'T::Number' : Temperature in K
+-   'mlf::Array{Number,1}' : species mole fractions    
 """
-function Hmix(thermoObj::SpeciesThermoObj,T::Float64,mlf::Array{Float64,1})    
+function Hmix(thermoObj::SpeciesThermoObj,T::Number,mlf::Array{Number,1})    
     all_species_h = H_all(thermoObj,T)        
     return sum(all_species_h .* mlf)    
 end
@@ -321,25 +321,25 @@ Calculates the specific heat of a mixture in J/mol-K
 #   Usage
     cpmix(td,T,mlf)
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
--   'T::Float64' : Temperature in K
--   'mlf::Array{Float64,1}' : species mole fractions    
+-   'T::Number' : Temperature in K
+-   'mlf::Array{Number,1}' : species mole fractions    
 """
-function cpmix(thermoObj::SpeciesThermoObj,T::Float64,mlf::Array{Float64,1})
+function cpmix(thermoObj::SpeciesThermoObj,T::Number,mlf::Array{Number,1})
     all_species_cp = cp_all(thermoObj,T)
     return sum(all_species_cp .* mlf)
 end
 
 """
-Smix(thermoObj::SpeciesThermoObj,T::Float64,p::Float64,mlf::Array{Float64,1})
+Smix(thermoObj::SpeciesThermoObj,T::Number,p::Number,mlf::Array{Number,1})
 Calculates the entropy of a muxture in J/mol-K
 #   Usage
     Smix(thermoObj,T,p,mlf)
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
--   'T::Float64' : Temperature in K 
--   'p::Float64' : total pressure Pa
--   'mlf::Array{Float64,1} ': mole fractions
+-   'T::Number' : Temperature in K 
+-   'p::Number' : total pressure Pa
+-   'mlf::Array{Number,1} ': mole fractions
 """
-function Smix(thermoObj::SpeciesThermoObj,T::Float64,p::Float64,mlf::Array{Float64,1})
+function Smix(thermoObj::SpeciesThermoObj,T::Number,p::Number,mlf::Array{Number,1})
     all_species_s = S_all(thermoObj,T)
     xp = mlf .* (p/p_std)
     #logterm = [x <= 0 ? 0 : log(x) for x in xp]
@@ -352,11 +352,11 @@ Calculates the Gibbs free energy of a muxture in J/mol
 #   Usage
     Gmix(thermoObj,T,p,mlf)
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
--   'T::Float64' : Temperature in K 
--   'p::Float64' : total pressure Pa
--   'mlf::Array{Float64,1} ': mole fractions
+-   'T::Number' : Temperature in K 
+-   'p::Number' : total pressure Pa
+-   'mlf::Array{Number,1} ': mole fractions
 """
-function  Gmix(thermoObj::SpeciesThermoObj, T::Float64,p::Float64,mlf::Array{Float64,1})
+function  Gmix(thermoObj::SpeciesThermoObj, T::Number,p::Number,mlf::Array{Number,1})
     hmix = Hmix(thermoObj,T,mlf)
     smix = Smix(thermoObj,T,p,mlf)
     return hmix - T*smix
@@ -371,7 +371,7 @@ Function to calculate the standard potential for H2 oxidation.
 -   thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
 -   T: Temperature in K
 """
-function E0_H2(thermoObj, T)
+function E0_H2(thermoObj::SpeciesThermoObj, T::Number)
     
     if T < 373.15
         return 1.229-0.85e-3(T-298.15)
@@ -403,7 +403,7 @@ Function to calculate the standard potential for CO oxidation
 -   thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
 -   T: Temperature in K
 """
-function E0_CO(thermoObj, T)   
+function E0_CO(thermoObj::SpeciesThermoObj, T::Number)   
     species_all =[ nasa_thermo.name for nasa_thermo in thermoObj.thermo_all]
     hCO = H(thermoObj.thermo_all[get_index("CO", species_all)], T)
     hO2 = H(thermoObj.thermo_all[get_index("O2", species_all)], T)
@@ -426,28 +426,28 @@ function E0_CO(thermoObj, T)
 """
 Function to calculate the Nernst potential for H2 oxidation
 #  Usage:    
-   nernst_potential(::H2Oxidation, E0::Float64, T::Float64; aH2, aO2, aH2O)
+   nernst_potential(::H2Oxidation, E0::Number, T::Number; aH2, aO2, aH2O)
 -  E0 : standard potential for H2 oxidation
 -  T : Temperature in K
 -  aH2 : Activity of H2
 -  aO2 : Activity of O2
 -  aH2O : Activity of H2O
 """
-function nernst_potential(::H2Oxidation, E0::Float64, T::Float64; aH2, aO2, aH2O)
+function nernst_potential(::H2Oxidation, E0::Number, T::Number; aH2, aO2, aH2O)
     return E0 - (R*T/2F)*log(aH2O/(aH2*sqrt(aO2)))
 end
 
 """
 Function to calculate the Nernst potential for CO oxidation
 #  Usage:    
-   nernst_potential(::COOxidation, E0::Float64, T::Float64; aCO, aO2, aCO2)
+   nernst_potential(::COOxidation, E0::Number, T::Number; aCO, aO2, aCO2)
 -  E0 : standard potential for CO oxidation
 -  T : Temperature in K
 -  aCO : Activity of CO 
 -  aO2 : Activity of O2
 -  aCO2 : Activity of CO2
 """        
-function nernst_potential(::COOxidation, E0::Float64, T::Float64; aCO, aO2, aCO2)
+function nernst_potential(::COOxidation, E0::Number, T::Number; aCO, aO2, aCO2)
     return E0 - (R*T/2F)*log(aCO2/(aCO*sqrt(aO2)))
 end
 
@@ -461,8 +461,17 @@ end
  -  pO2 : Partial pressure of O2 (Pa)
  -  pH2O : Partial pressure of H2O (Pa)
  """
-function nernst_h2(E0::Float64, T::Float64; pH2=1.0, pO2=1.0, pH2O=1.0)
-    return E0 - (R*T/2F)*log((pH2O/p_std)/((pH2/p_std)*(pO2/p_std)^0.5))    
+function nernst_h2(E0::Number, T::Number; pH2=p_std, pO2=p_std, pH2O=p_std, water=:liquid)
+    aH2  = pH2/p_std
+    aO2  = pO2/p_std
+    if water == :liquid
+        aH2O = 1.0
+    elseif water == :vapour || water == :gas || water == :vapor
+        aH2O = pH2O/p_std
+    else
+        throw(error("Invalid water phase specified. Use :liquid or :vapour"))
+    end    
+    return nernst_potential(H2Oxidation(), E0, T, aH2=aH2, aO2=aO2, aH2O=aH2O)
 end
 
 
@@ -476,8 +485,11 @@ Function to calculate the Nernst potential for CO oxidation
 -  pO2 : Partial pressure of O2 (Pa)
 -  pCO2 : Partial pressure of CO2 (Pa)
 """
-function nernst_co(E0::Float64, T::Float64; pCO=1.0, pO2=1.0, pCO2=1.0)
-    return E0 - (R*T/2F)*log(pCO2/(pCO*(pO2/p_std)^0.5))    
+function nernst_co(E0::Number, T::Number; pCO=p_std, pO2=p_std, pCO2=p_std)
+    aCO = pCO/p_std
+    aO2 = pO2/p_std
+    aCO2 = pCO2/p_std    
+    return nernst_potential(COOxidation(), E0, T, aCO=aCO, aO2=aO2, aCO2=aCO2)
 end
 
 
