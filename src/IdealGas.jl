@@ -311,7 +311,7 @@ Calculates the enthalpy of a mixture J/mol
 -   'T::Number' : Temperature in K
 -   'mlf::Array{Number,1}' : species mole fractions    
 """
-function Hmix(thermoObj::SpeciesThermoObj,T::Number,mlf::Array{Number,1})    
+function Hmix(thermoObj::SpeciesThermoObj,T::Number,mlf::AbstractVector{<:Number})    
     all_species_h = H_all(thermoObj,T)        
     return sum(all_species_h .* mlf)    
 end
@@ -324,22 +324,22 @@ Calculates the specific heat of a mixture in J/mol-K
 -   'T::Number' : Temperature in K
 -   'mlf::Array{Number,1}' : species mole fractions    
 """
-function cpmix(thermoObj::SpeciesThermoObj,T::Number,mlf::Array{Number,1})
+function cpmix(thermoObj::SpeciesThermoObj,T::Number,mlf::AbstractVector{<:Number})
     all_species_cp = cp_all(thermoObj,T)
     return sum(all_species_cp .* mlf)
 end
 
 """
-Smix(thermoObj::SpeciesThermoObj,T::Number,p::Number,mlf::Array{Number,1})
+Smix(thermoObj::SpeciesThermoObj,T::Number,p::Number,mlf::AbstractVector{<:Number})
 Calculates the entropy of a muxture in J/mol-K
 #   Usage
     Smix(thermoObj,T,p,mlf)
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
 -   'T::Number' : Temperature in K 
 -   'p::Number' : total pressure Pa
--   'mlf::Array{Number,1} ': mole fractions
+-   'mlf::AbstractVector{<:Number} ': mole fractions
 """
-function Smix(thermoObj::SpeciesThermoObj,T::Number,p::Number,mlf::Array{Number,1})
+function Smix(thermoObj::SpeciesThermoObj,T::Number,p::Number,mlf::AbstractVector{<:Number})
     all_species_s = S_all(thermoObj,T)
     xp = mlf .* (p/p_std)
     #logterm = [x <= 0 ? 0 : log(x) for x in xp]
@@ -354,9 +354,9 @@ Calculates the Gibbs free energy of a muxture in J/mol
 -   'thermoObj::SpeciesThermoObj' : Structure of SpeciesThermoObj
 -   'T::Number' : Temperature in K 
 -   'p::Number' : total pressure Pa
--   'mlf::Array{Number,1} ': mole fractions
+-   'mlf::AbstractVector{<:Number} ': mole fractions
 """
-function  Gmix(thermoObj::SpeciesThermoObj, T::Number,p::Number,mlf::Array{Number,1})
+function  Gmix(thermoObj::SpeciesThermoObj, T::Number,p::Number,mlf::AbstractVector{<:Number})
     hmix = Hmix(thermoObj,T,mlf)
     smix = Smix(thermoObj,T,p,mlf)
     return hmix - T*smix
